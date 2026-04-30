@@ -1,0 +1,124 @@
+{{define "content"}}
+{{$status := .Data}}
+<div class="mt-4">
+
+{{if $status}}
+  {{if $status.Ticket}}
+    <!-- Customer has a ticket -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center mb-4">
+      <p class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">Nomor Antrian Anda</p>
+      <div class="text-8xl font-black text-indigo-600 leading-none mb-4">
+        {{printf "%03d" $status.Ticket.Number}}
+      </div>
+
+      {{if eq $status.Ticket.Status "waiting"}}
+      <span class="inline-block bg-yellow-100 text-yellow-800 text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
+        ⏳ Menunggu
+      </span>
+      {{else if eq $status.Ticket.Status "called"}}
+      <span class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-4 py-1.5 rounded-full mb-6 animate-pulse">
+        🔔 Dipanggil!
+      </span>
+      {{else if eq $status.Ticket.Status "done"}}
+      <span class="inline-block bg-green-100 text-green-800 text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
+        ✓ Selesai
+      </span>
+      {{else if eq $status.Ticket.Status "skipped"}}
+      <span class="inline-block bg-gray-100 text-gray-600 text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
+        ⊘ Dilewati
+      </span>
+      {{end}}
+
+      <div class="grid grid-cols-2 gap-4 mt-2">
+        <div class="bg-gray-50 rounded-xl p-4">
+          <p class="text-xs text-gray-500 mb-1">Sedang dilayani</p>
+          <p class="text-2xl font-bold text-gray-800">
+            {{if $status.Session.CurrentNumber}}
+              {{printf "%03d" $status.Session.CurrentNumber}}
+            {{else}}
+              —
+            {{end}}
+          </p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4">
+          <p class="text-xs text-gray-500 mb-1">Posisi Anda</p>
+          <p class="text-2xl font-bold text-gray-800">
+            {{if gt $status.Position 0}}ke-{{$status.Position}}{{else}}—{{end}}
+          </p>
+        </div>
+      </div>
+
+      {{if gt $status.EstimatedWait 0}}
+      <div class="mt-4 bg-indigo-50 rounded-xl p-3">
+        <p class="text-sm text-indigo-700">
+          ⏱ Estimasi tunggu: <span class="font-bold">~{{$status.EstimatedWait}} menit</span>
+        </p>
+      </div>
+      {{end}}
+
+      {{if $status.Session.IsOpen}}
+      <p class="text-xs text-gray-400 mt-4">Anda akan menerima notifikasi WhatsApp saat antrian dekat</p>
+      {{else}}
+      <div class="mt-4 bg-orange-50 rounded-xl p-3">
+        <p class="text-sm text-orange-700 font-medium">Antrian sedang ditutup</p>
+      </div>
+      {{end}}
+    </div>
+
+    <!-- Auto refresh indicator -->
+    <div class="text-center">
+      <p class="text-xs text-gray-400" id="refresh-text">Memperbarui otomatis dalam <span id="countdown">30</span> detik</p>
+    </div>
+
+    <script>
+      let countdown = 30;
+      setInterval(() => {
+        countdown--;
+        document.getElementById('countdown').textContent = countdown;
+        if (countdown <= 0) {
+          window.location.reload();
+        }
+      }, 1000);
+    </script>
+
+  {{else}}
+    <!-- No ticket yet -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+      <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <svg class="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+      </div>
+
+      <h2 class="text-2xl font-bold text-gray-900 mb-2">Ambil Nomor Antrian</h2>
+      <!-- <p class="text-gray-500 text-sm mb-2">Jam layanan: {{$.Tenant.OpenTime}} – {{$.Tenant.CloseTime}}</p> -->
+
+      {{if $status.Session.IsOpen}}
+      <p class="text-gray-500 text-sm mb-6">
+        <span class="inline-block w-2 h-2 bg-green-400 rounded-full mr-1"></span>
+        Antrian terbuka · {{$status.TotalWaiting}} orang menunggu
+      </p>
+
+      <form method="POST" action="/{{$.Tenant.Slug}}/queue/take">
+        <button type="submit"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-colors text-lg">
+          Ambil Nomor Antrian
+        </button>
+      </form>
+      {{else}}
+      <div class="bg-orange-50 rounded-xl p-4 mt-4">
+        <p class="text-orange-800 font-semibold">Antrian belum dibuka</p>
+        <p class="text-orange-600 text-sm mt-1">Jam layanan: {{$.Tenant.OpenTime}} – {{$.Tenant.CloseTime}}</p>
+      </div>
+      {{end}}
+    </div>
+  {{end}}
+
+{{else}}
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+    <p class="text-gray-500">Memuat data antrian...</p>
+  </div>
+{{end}}
+
+</div>
+{{end}}

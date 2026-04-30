@@ -1,0 +1,48 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{if .Tenant}}{{.Tenant.Name}}{{else}}Jetlink{{end}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <header class="bg-indigo-600 text-white shadow-md">
+    <div class="max-w-lg mx-auto px-4 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold">{{if .Tenant}}{{.Tenant.Name}}{{else}}Jetlink{{end}}</h1>
+        {{if .Tenant}}<p class="text-indigo-200 text-xs">Sistem Antrian Digital</p>{{end}}
+      </div>
+      {{if .Customer}}
+      <form method="POST" action="/{{.Tenant.Slug}}/logout">
+        <button type="submit" class="text-indigo-200 hover:text-white text-sm underline">Keluar</button>
+      </form>
+      {{end}}
+    </div>
+  </header>
+
+  <main class="max-w-lg mx-auto px-4 py-6">
+    {{if .Flash}}
+    <div class="mb-4 bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm font-medium">
+      ✓ {{.Flash}}
+    </div>
+    {{end}}
+    {{if .Error}}
+    <div class="mb-4 bg-red-50 border border-red-200 text-red-800 rounded-xl px-4 py-3 text-sm font-medium">
+      ✕ {{.Error}}
+    </div>
+    {{end}}
+
+    {{template "content" .}}
+  </main>
+
+  <footer class="text-center text-xs text-gray-400 py-6">
+    Powered by <span class="font-semibold text-indigo-400">Jetlink</span>
+  </footer>
+</body>
+</html>
+{{end}}

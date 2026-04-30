@@ -1,0 +1,137 @@
+{{define "content"}}
+<div>
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">Manajemen Tenant</h2>
+    <button onclick="document.getElementById('createModal').classList.remove('hidden')"
+      class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors">
+      + Buat Tenant Baru
+    </button>
+  </div>
+
+  <!-- Tenant list -->
+  {{$tenants := .Data}}
+  {{if $tenants}}
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        <tr>
+          <th class="px-6 py-3 text-left">Tenant</th>
+          <th class="px-6 py-3 text-left">URL</th>
+          <th class="px-6 py-3 text-left">Admin Email</th>
+          <th class="px-6 py-3 text-left">Status</th>
+          <th class="px-6 py-3 text-left">Dibuat</th>
+          <th class="px-6 py-3 text-right">Aksi</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {{range $tenants}}
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4">
+            <p class="font-semibold text-gray-900">{{.Name}}</p>
+          </td>
+          <td class="px-6 py-4">
+            <a href="/{{.Slug}}" target="_blank" class="text-indigo-600 hover:underline text-sm">
+              /{{.Slug}}
+            </a>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-600">{{.AdminEmail}}</td>
+          <td class="px-6 py-4">
+            {{if .IsActive}}
+            <span class="text-xs font-medium bg-green-100 text-green-700 px-2.5 py-1 rounded-full">Aktif</span>
+            {{else}}
+            <span class="text-xs font-medium bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full">Nonaktif</span>
+            {{end}}
+          </td>
+          <td class="px-6 py-4 text-xs text-gray-500">{{.CreatedAt.Format "02 Jan 2006"}}</td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <a href="/{{.Slug}}/admin" target="_blank"
+                class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-3 py-1.5 rounded-lg transition-colors">
+                Admin Panel ↗
+              </a>
+              {{if .IsActive}}
+              <form method="POST" action="/superadmin/tenants/{{.ID}}/delete"
+                onsubmit="return confirm('Nonaktifkan tenant ini?')">
+                <button class="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-medium px-3 py-1.5 rounded-lg transition-colors">
+                  Nonaktifkan
+                </button>
+              </form>
+              {{else}}
+              <form method="POST" action="/superadmin/tenants/{{.ID}}">
+                <input type="hidden" name="name" value="{{.Name}}">
+                <input type="hidden" name="is_active" value="1">
+                <button class="text-xs bg-green-100 hover:bg-green-200 text-green-700 font-medium px-3 py-1.5 rounded-lg transition-colors">
+                  Aktifkan
+                </button>
+              </form>
+              {{end}}
+            </div>
+          </td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+  <div class="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
+    <p class="text-gray-400 mb-4">Belum ada tenant terdaftar</p>
+    <button onclick="document.getElementById('createModal').classList.remove('hidden')"
+      class="bg-indigo-600 text-white font-medium px-6 py-2.5 rounded-xl text-sm">
+      Buat Tenant Pertama
+    </button>
+  </div>
+  {{end}}
+</div>
+
+<!-- Create Tenant Modal -->
+<div id="createModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-xl font-bold text-gray-900">Buat Tenant Baru</h3>
+      <button onclick="document.getElementById('createModal').classList.add('hidden')"
+        class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+    </div>
+
+    <form method="POST" action="/superadmin/tenants" class="space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Tenant</label>
+        <input type="text" name="name" required placeholder="Klinik Sehat Selalu"
+          class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">URL Slug</label>
+        <input type="text" name="slug" required placeholder="klinik-sehat-selalu"
+          pattern="[a-z0-9\-]+" title="Hanya huruf kecil, angka, dan minus"
+          class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <p class="text-xs text-gray-400 mt-1">Customer akses di: yourapp.com/<strong>slug</strong></p>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Email Admin</label>
+        <input type="email" name="admin_email" required placeholder="admin@klinik.com"
+          class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Password Admin</label>
+        <input type="password" name="admin_password" required placeholder="Min. 8 karakter"
+          class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Estimasi Waktu / Nomor (menit)</label>
+        <input type="number" name="estimated_minutes" value="5" min="1"
+          class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')"
+          class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl text-sm transition-colors">
+          Batal
+        </button>
+        <button type="submit"
+          class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
+          Buat Tenant
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{{end}}

@@ -1,0 +1,98 @@
+{{define "content"}}
+{{$d := .Data}}
+<div>
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">Dashboard</h2>
+    <div class="flex gap-3">
+      {{if $d.Session.IsOpen}}
+      <form method="POST" action="/{{.Tenant.Slug}}/admin/queue/close">
+        <button class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-4 py-2 rounded-xl text-sm transition-colors">
+          Tutup Antrian
+        </button>
+      </form>
+      {{else}}
+      <form method="POST" action="/{{.Tenant.Slug}}/admin/queue/open">
+        <button class="bg-green-100 hover:bg-green-200 text-green-700 font-semibold px-4 py-2 rounded-xl text-sm transition-colors">
+          Buka Antrian
+        </button>
+      </form>
+      {{end}}
+      <a href="/{{.Tenant.Slug}}/admin/queue"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors">
+        Kelola Antrian →
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+      <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Nomor Saat Ini</p>
+      <p class="text-4xl font-black text-indigo-600">
+        {{if $d.Session.CurrentNumber}}{{printf "%03d" $d.Session.CurrentNumber}}{{else}}—{{end}}
+      </p>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+      <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Menunggu</p>
+      <p class="text-4xl font-black text-yellow-500">{{$d.TotalWaiting}}</p>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+      <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Selesai</p>
+      <p class="text-4xl font-black text-green-500">{{$d.TotalDone}}</p>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+      <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Status</p>
+      {{if $d.Session.IsOpen}}
+      <span class="inline-flex items-center gap-1.5 text-green-700 font-semibold text-sm">
+        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+        Buka
+      </span>
+      {{else}}
+      <span class="inline-flex items-center gap-1.5 text-gray-500 font-semibold text-sm">
+        <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+        Tutup
+      </span>
+      {{end}}
+    </div>
+  </div>
+
+  <!-- Quick action -->
+  {{if $d.Session.IsOpen}}
+  <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm mb-6">
+    <h3 class="text-lg font-bold text-gray-900 mb-4">Panggil Selanjutnya</h3>
+    <form method="POST" action="/{{.Tenant.Slug}}/admin/queue/next">
+      <button type="submit"
+        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl text-lg transition-colors">
+        📢 Panggil Nomor Berikutnya
+      </button>
+    </form>
+  </div>
+  {{end}}
+
+  <!-- Recent tickets -->
+  {{if $d.Tickets}}
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100">
+      <h3 class="font-bold text-gray-900">Antrian Hari Ini</h3>
+    </div>
+    <div class="divide-y divide-gray-50">
+      {{range $d.Tickets}}
+      <div class="px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <span class="text-xl font-black text-gray-800 w-12">{{printf "%03d" .Number}}</span>
+          <span class="text-sm text-gray-500">{{.CustomerPhone}}</span>
+        </div>
+        <span class="text-xs font-medium px-2.5 py-1 rounded-full {{statusColor .Status}}">
+          {{statusLabel .Status}}
+        </span>
+      </div>
+      {{end}}
+    </div>
+  </div>
+  {{else}}
+  <div class="bg-white rounded-2xl border border-gray-100 p-8 text-center shadow-sm">
+    <p class="text-gray-400">Belum ada antrian hari ini</p>
+  </div>
+  {{end}}
+</div>
+{{end}}
