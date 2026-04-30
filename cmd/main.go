@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
 
 	"github.com/ferdifir/jetlink/internal/config"
@@ -27,20 +26,12 @@ func main() {
 	}
 	defer db.Close()
 
-	store := sessions.NewCookieStore([]byte(cfg.SessionSecret))
-	store.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   86400 * 7,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	}
-
 	tenantRepo := repository.NewTenantRepo(db)
 	customerRepo := repository.NewCustomerRepo(db)
 	queueRepo := repository.NewQueueRepo(db)
 
 	fonnte := services.NewFonnteClient(cfg.FonnteToken)
-	authSvc := services.NewAuthService(customerRepo, fonnte, store)
+	authSvc := services.NewAuthService(customerRepo, fonnte)
 	queueSvc := services.NewQueueService(queueRepo, tenantRepo)
 	notifSvc := services.NewNotificationService(queueRepo, fonnte)
 	queueSvc.SetNotificationService(notifSvc)
