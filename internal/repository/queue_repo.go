@@ -46,11 +46,16 @@ func (r *QueueRepo) GetOrCreateSessionWithTenant(tenantID int, tenant *models.Te
 	}
 
 	if tenant != nil && !s.IsOpen && s.CurrentNumber == 0 {
-		now := time.Now()
-		loc := now.Location()
+		// Use Asia/Jakarta timezone as default for queue opening logic
+		loc, err := time.LoadLocation("Asia/Jakarta")
+		if err != nil {
+			// Fallback to local timezone if Asia/Jakarta is not available
+			loc = time.Now().Location()
+		}
+		now := time.Now().In(loc)
 		
 		openTime, err := time.ParseInLocation("15:04", tenant.OpenTime, loc)
-		if err == nil && now.After(openTime) {
+		if err == nil && !now.Before(openTime) {
 			closeTime, err := time.ParseInLocation("15:04", tenant.CloseTime, loc)
 			if err == nil && now.Before(closeTime) {
 				_, err = r.db.Exec(`UPDATE queue_sessions SET is_open=TRUE, updated_at=NOW() WHERE id=?`, s.ID)
